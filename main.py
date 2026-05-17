@@ -111,7 +111,7 @@ async def on_message(message):
     
     print("understood intent")
     
-  await asyncio.to_thread(sendtoai2)
+  await asyncio.to_thread(aiproccess1)
   
   userinfo = userdata.find_one({"user": message.author.name})
   if intent == True: 
@@ -126,7 +126,7 @@ async def on_message(message):
     userdata.delete_one({"user": message.author.name})
     userdata.insert_one(userinfo)
 
-  await asyncio.to_thread(sendtoai3)
+  await asyncio.to_thread(aiproccess2)
   print("finished all processes")
 
 @bot.command(name = "mode", help = "the mode you want Mika to be")
