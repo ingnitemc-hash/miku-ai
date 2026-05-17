@@ -170,7 +170,7 @@ async def clearcache(ctx, user: str = commands.parameter(description="the user w
 
 async def startbot():
   print("started running")
-  await bot.start(os.getenv("YOUR_DISCORD_TOKEN")
+  await bot.start(os.getenv("YOUR_DISCORD_TOKEN"))
 
 asyncio.run(startbot())
 
