@@ -1,4 +1,5 @@
 discord.py
+logging
 openai
 pymongo
 requests
