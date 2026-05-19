@@ -2,6 +2,7 @@ discord.py
 logging
 openai
 pymongo
-requests
+groq
+tempfile
 #a mongo db database called "Mikadb" and a collection inside it called "userdata"
 #create system variables for the tokens
