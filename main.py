@@ -221,7 +221,6 @@ async def userinfo(ctx, user: str = commands.parameter(description="the user you
   await ctx.channel.send(embed=embed)
   return
 
-
 async def startbot():
   print("started running")
   await bot.start(os.getenv("DISCORD_TOKEN"))
