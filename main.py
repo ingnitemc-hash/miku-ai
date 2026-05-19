@@ -221,6 +221,59 @@ async def userinfo(ctx, user: str = commands.parameter(description="the user you
   await ctx.channel.send(embed=embed)
   return
 
+@bot.command(name = "shutdown", help = "shut down the bot")
+async def shutdown(ctx):
+  if ctx.author.name != "shadowninja69420":
+    await ctx.channel.send("you cannot use this")
+    return
+  await ctx.channel.send("shutting down...")
+  await bot.close()
+
+@bot.command(name = "restart", help = "restart the bot")
+async def restart(ctx):     
+  if ctx.author.name != "shadowninja69420":
+    await ctx.channel.send("you cannot use this")
+    return
+  await ctx.channel.send("restarting...")
+  await bot.close()
+  asyncio.run(startbot())
+
+@bot.command(name = "ping", help = "check the bot's latency")
+async def ping(ctx):
+  latency = bot.latency * 1000
+  await ctx.channel.send(f"Latency: {latency}ms")
+
+@bot.command(name = "see code", help = "see the bot's code")
+async def see_code(ctx):
+  await ctx.channel.send("Here's the bot's code: https://github.com/ingnitemc-hash/mika-ai")
+
+@bot.command(name = "(moannnn)", help = "moan")
+async def moan(ctx):
+  global voice_client
+  await ctx.channel.send("moans seductively")
+  file = tempfile.NamedTemporaryFile(dir=dir.name, suffix=".wav", delete=True).name
+  if vc:
+    client = Groq(api_key=token)
+    tts = client.audio.speech.create(model="playai-tts", voice="Mika", text="(moan sound)", response_format="wav")
+    tts.write_to_file(file)
+    voice_client.play(discord.FFmpegPCMAudio(file), after=lambda e: print("finished playing sound"))
+  else:
+    return
+  
+@bot.command(name = "helpme", help = "get help about the bot's commands")
+async def helpme(ctx):
+  embed = discord.Embed(title="📚 Mika's Commands", description="Here's a list of Mika's commands and what they do:", color=0x8a2be2)
+  embed.add_field(name="!mode [mode]", value="Change Mika's mode. Available modes: default, freaky", inline=False)
+  embed.add_field(name="!clearcache [user]", value="Clear the cache for a specific user or all users if no user is specified", inline=False)
+  embed.add_field(name="!gen-img [prompt]", value="Generate an image based on the provided prompt", inline=False)
+  embed.add_field(name="!userinfo [user]", value="Get information about a specific user", inline=False)
+  embed.add_field(name="!shutdown", value="Shut down the bot (admin only)", inline=False)
+  embed.add_field(name="!restart", value="Restart the bot (admin only)", inline=False)
+  embed.add_field(name="!ping", value="Check the bot's latency", inline=False)
+  embed.add_field(name="!see code", value="Get a link to the bot's source code on GitHub", inline=False)
+  embed.add_field(name="!(moannnn)", value="Make Mika moan seductively (only works if Mika is in a voice channel)", inline=False)
+  await ctx.channel.send(embed=embed)
+
 async def startbot():
   print("started running")
   await bot.start(os.getenv("DISCORD_TOKEN"))
