@@ -63,6 +63,14 @@ async def on_message(message):
     mesg = "Hi!"
   else:
     mesg = message.content
+  if "mika, nyah nyha" in message.content.lower():
+    embed = discord.Embed(title="🎨 mika drew this for you :3", 
+      description=f"*prompt:* {"cat in bikini"}", 
+      color=0xffb6c1
+    )
+    embed.set_image(url=pollinations_img("cat in bikini"))
+    await message.channel.send(embed=embed)
+    return
   print("passed filter")
   if "mika, join vc" in message.content.lower():
     await voice_client.connect
