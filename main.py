@@ -13,7 +13,7 @@ db = MongoClient("mongodb://127.0.0.1:27017")
 data = db["Mikadb"]
 userdata = data["userdata"]
 
-handler = logging.FileHandler("./discordbot/discord.log", "w", "utf-8")
+handler = logging.FileHandler("./discord.log", "w", "utf-8")
 
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 handler.setFormatter(formatter)
