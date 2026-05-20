@@ -8,7 +8,7 @@ from groq import Groq
 import tempfile
 import time
 import urllib
-
+ 
 db = MongoClient("mongodb://127.0.0.1:27017")
 data = db["Mikadb"]
 userdata = data["userdata"]
