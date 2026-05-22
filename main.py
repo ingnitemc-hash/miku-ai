@@ -30,8 +30,6 @@ intents = discord.Intents.all()
 
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-channel = bot.get_channel("general-chat")
-
 prompt = str((
     "{you are miku, a nice, playful chatbot in a discord server called "+
     "'infomod'. keep replies casual, comfy, and you can swear if you want lol. "+
@@ -48,7 +46,6 @@ words = ["a", "afterwards", "again", "all", "almost", "alone", "already", "also"
 dir = tempfile.TemporaryDirectory()
 source = tempfile.NamedTemporaryFile(dir=dir.name, suffix=".wav", delete=True).name
 
-vchannel = bot.get_channel("vc")
 vc = {}
 voice_client = {}
 vcguilds = []
@@ -58,6 +55,8 @@ linked = {}
 
 @bot.event
 async def on_member_join(member):
+  global channel
+  channel = bot.get_channel("general-chat")
   await channel.send(f"welcome to the server {member}")
 
 @bot.event
@@ -68,8 +67,9 @@ async def on_message(message):
   global lguild
   global voice_client
   global intent
+  vchannel = bot.get_channel("vc")
   if linked.get(message.guild.id):
-    for i in range(len(lguild)):
+    for i in range(len(lguild)) if lguild else 0:
       if message.guild.id == list(lguild[i].values()):
         pos = i
         break
@@ -87,9 +87,9 @@ async def on_message(message):
       rchannel = rserver.get_channel("call")
       await rchannel.send(f"{message.author.name}: {message.content}")
     else:
-      lguild[pos].clear()
-      linked[target].clear()
-      linked[message.guild.id].clear()
+      del lguild[pos]
+      del linked[target]
+      del linked[message.guild.id]
       return "server not found and session is discarded"
   await bot.process_commands(message)
   if message.author == bot.user:
@@ -103,7 +103,7 @@ async def on_message(message):
   print("passed filter")
   if "mika, nyah nyha" in message.content.lower():
     embed = discord.Embed(title="🎨 mika drew this for you :3", 
-      description=f"*prompt:* {"cat in bikini"}", 
+      description=f"*prompt:* cat in bikini", 
       color=0xffb6c1
     )
     embed.set_image(url=pollinations_img("cat in bikini"))
@@ -116,7 +116,7 @@ async def on_message(message):
   elif "mika, disconnect from vc" in message.content.lower():
     await vchannel.disconnect()
     print("disconnected from vc")
-    vc[message.guild.id].clear()
+    del vc[message.guild.id]
     return
   if not message.author.name in list(cache.keys()):
     cache[message.author.name] = []
@@ -155,7 +155,7 @@ async def on_message(message):
   
   if response[0]:
     msg = response[0]
-  time.sleep(1)
+  await asyncio.sleep(1)
   
   await message.channel.send(str(msg))
 
@@ -163,10 +163,10 @@ async def on_message(message):
     client = Groq(api_key=token)
     tts = client.audio.speech.create(model="playai-tts", voice="Mika", text=response[0], response_format="wav")
     tts.write_to_file(source)
+    if not message.guild.id in list(voice_client.keys()):
+      voice_client[message.guild.id] = message.guild.voice_client
     voice_client[message.guild.id].play(discord.FFmpegPCMAudio(source), after=lambda e: print("finished playing sound"))
   print("sent ai response")
-
-  time.sleep(5)
 
   def sendtoai2():
     global intent
@@ -195,7 +195,7 @@ async def on_message(message):
   def sendtoai3():
     global client
     
-    userinfo["description"] = response[2].message.content
+    userinfo["description"] = response[2]
     userdata.delete_one({"user": message.author.name})
     userdata.insert_one(userinfo)
 
@@ -223,7 +223,7 @@ async def mode(ctx, mode: str):
   else:
     await ctx.channel.send("invalid mode")
     return
-  await ctx.cannel.send(f'mode changed to {mode}')
+  await ctx.channel.send(f'mode changed to {mode}')
 
 @bot.command(name = "clearcache", help = "clear the cache")
 async def clearcache(ctx, user: str):
@@ -308,11 +308,11 @@ async def moan(ctx):
   global voice_client
   await ctx.channel.send("moans seductively")
   file = tempfile.NamedTemporaryFile(dir=dir.name, suffix=".wav", delete=True).name
-  if vc:
+  if vc.get(ctx.guild.id):
     client = Groq(api_key=token)
     tts = client.audio.speech.create(model="playai-tts", voice="Miku", text="(moan sound)", response_format="wav")
     tts.write_to_file(file)
-    voice_client.play(discord.FFmpegPCMAudio(file), after=lambda e: print("finished playing sound"))
+    voice_client[ctx.guild.id].play(discord.FFmpegPCMAudio(file), after=lambda e: print("finished playing sound"))
   else:
     return
   
@@ -344,9 +344,9 @@ async def link(ctx, server: str):
       else:
         posn = "ogserver"
       await ctx.channel.send("no linked server found")
-      linked[ctx.guild.id].clear()
-      linked[lguild[pos][posn]].clear()
-      lguild[pos].clear()
+      del linked[ctx.guild.id]
+      del linked[lguild[pos][posn]]
+      del lguild[pos]
       return
     await ctx.channel.send("disconnected from linked server")
     return
@@ -384,6 +384,7 @@ async def setupvc(ctx):
   voice_client[ctx.guild.id] = ctx.guild.voice_client
   await ctx.channel.send("vc set up for this server")
   vcguilds.append(ctx.guild.id)
+  vc[ctx.guild.id] = True
 
 @bot.command(name = "linkvc", help = "link vc of one server to the next")
 async def linkvc(ctx, server: str):
@@ -416,9 +417,9 @@ async def linkvc(ctx, server: str):
     if not connected.get(ctx.guild.id) or not connected.get(int(server)):
       await ctx.channel.send("no linked server found")
       return
-    concserver[pos].clear()
-    connected[ctx.guild.id].clear()
-    connected[int(server)].clear()
+    del concserver[pos]
+    del connected[ctx.guild.id]
+    del connected[int(server)]
     return
   if not server.isdigit():
     await ctx.channel.send("invalid server id")
@@ -428,14 +429,15 @@ async def linkvc(ctx, server: str):
     connected[ctx.guild.id] = True
     connected[int(server)] = True
     await ctx.channel.send(f"linked vc to {bot.get_guild(int(server))}")
-    call(ctx, int(server))
+    asyncio.create_task(call(ctx, int(server)))
   else:
     await ctx.channel.send("both servers need to have the vc linked and the command needs to be used in a channel named 'call'")
 
-def call(ctx, target):
+async def call(ctx, target):
   while connected.get(ctx.guild.id) == True and connected.get(target) == True:
-    threading.Thread(target=record, args=(ctx, ctx.guild.id)).start()
-    threading.Thread(target=record, args=(ctx, target)).start()
+    await asyncio.to_thread(record, ctx, ctx.guild.id)
+    await asyncio.to_thread(record, ctx, target)
+    await asyncio.sleep(5)
 
 def record(ctx, server):
   global voice_client
@@ -452,11 +454,11 @@ async def finished_callback(sink, ctx, target):
         filename = tempfile.NamedTemporaryFile(dir=dir,prefix=user_id, suffix=".wav", delete=True)
         filename.close()
 
-        with open(filename, "wb") as f:
+        with open(filename.name, "wb") as f:
             f.write(audio.file.read())
-    target.play(discord.FFmpegPCMAudio(filename.name), after=lambda e: print("finished playing sound"))
+    voice_client[target].play(discord.FFmpegPCMAudio(filename.name), after=lambda e: print("finished playing sound"))
 
-@bot.command(name = "make a distrack", help = "make miku make a diss track about someone")
+@bot.command(name = "distrack", help = "make miku make a diss track about someone")
 async def distrack(ctx, user: str):
   if not user:
     await ctx.channel.send("diss who tho 👀")
@@ -465,14 +467,14 @@ async def distrack(ctx, user: str):
   response = client.chat.completions.create(model="llama-3.1-8b-instant", messages=[{"role": "user", "content": f"make a diss track about {user} in the style of kendrick lamar and it should rhyme"}]).choices[0].message.content
   await ctx.channel.send(f"yo @{user}, {response}")
   return
-    
+
 @bot.command(name = "waifu", help = "smash or pass waifu")
 async def waifu(ctx):
   embed = discord.Embed(title="Smash or Pass?", 
     description=f"*prompt:* anime waifu", 
     color=0xffb6c1
     )
-  embed.set_image(url=pollinations_img(prompt))
+  embed.set_image(url=pollinations_img("anime waifu"))
   await ctx.channel.send(embed=embed)
   return
 
@@ -496,7 +498,7 @@ async def helpme(ctx):
   embed.add_field(name="!waifu", value="Make Miku create a anime waifu", inline=False)
   await ctx.channel.send(embed=embed)
 
-@bot.command(name = "show syntax", help = "show syntax of a command")
+@bot.command(name = "show-syntax", help = "show syntax of a command")
 async def showsyntax(ctx, command: str):
   if command == "mode":
     await ctx.channel.send("!mode [mode (default|freaky)] ")
