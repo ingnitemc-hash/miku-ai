@@ -403,7 +403,7 @@ async def linkvc(ctx, server: str):
     connected[ctx.guild.id] = True
     connected[int(server)] = True
     await ctx.channel.send(f"linked vc to {bot.get_guild(target)}")
-    call(ctx, target)
+    asyncio.create_task(call(ctx, int(server)))
   if server == "(disconnect)":
     for i in range(len(concserver)):
       if ctx.guild.id in list(concserver[i].values()):
